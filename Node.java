@@ -17,6 +17,10 @@ public class Node {
         }
     }
 
+    public String toString() {
+        return pentomino.getShape().toString();
+    }
+
     public void setEnd (Node node) {
         endOfSuccessfulPath = node;
     }

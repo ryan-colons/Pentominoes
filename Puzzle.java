@@ -83,7 +83,7 @@ public class Puzzle {
             for (Coordinate coord : blocks) {
                 grid[coord.getX()][coord.getY()]--; 
             }
-            PuzzleSolver.availableShapes.remove(pentomino.getShape());
+            //PuzzleSolver.availableShapes.remove(pentomino.getShape());
             return true;
         } else {
             return false;
@@ -95,12 +95,12 @@ public class Puzzle {
             int x = coord.getX();
             int y = coord.getY();
             if (x < 0 || y < 0 || x >= grid.length || y >= grid[0].length) {
-                System.out.println("Out of grid!");
+                //System.out.println("Out of grid!");
                 return true;
             }
             if (boardTiles[x][y].getPentomino() != null) {
                 if (boardTiles[x][y].getLayer() == layer) {
-                    System.out.println("Space is already occupied!");
+                    //System.out.println("Space is already occupied!");
                     return true;
                 }
             }

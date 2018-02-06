@@ -5,6 +5,9 @@ import java.util.*;
 public class PuzzleSolver {
 
     public static ArrayList<PentominoShape> availableShapes = new ArrayList<PentominoShape>();
+    public static HashMap<String, Coordinate> memoTable;
+
+    
 
     public static void main(String[] args) {
         Scanner scan = new Scanner(System.in);
@@ -29,6 +32,7 @@ public class PuzzleSolver {
         puzzles.add(makePuzzle(lines));
         
         for (Puzzle puzz : puzzles) {
+            memoTable = new HashMap<String, Coordinate>();
             ArrayList<ArrayList<Node>> solution = solvePuzzle(puzz);
             if (solution == null) {
                 System.out.println("IMPOSSIBLE!");
@@ -55,6 +59,8 @@ public class PuzzleSolver {
                     }
                 }
             }
+            System.out.println();
+            System.out.println();
         }
     }
 
@@ -68,6 +74,7 @@ public class PuzzleSolver {
         int numLayers = puzzle.getNumLayers();
         Node[] solutions = new Node[numLayers];
         for (int i = numLayers; i > 0; i--) {
+            System.out.println("layer: " + i);
             Node solutionRoot = solveLayer(puzzle, i);
             if (solutionRoot == null) {
                 // go back to previous layer
@@ -109,24 +116,46 @@ public class PuzzleSolver {
         stack.addAll(initial.getChildren());
 
         int[][] grid = puzzleClone.getGridClone();
+        boolean totalBreak = false;
         
         while (stack.size() > 0) {
-            System.out.println("STACK SIZE: " + stack.size());
+            totalBreak = false;
+            System.out.println("STACK SIZE: " + stack.size() + ", LAYER: " + layer);
             
-            for (int x = 0; x < grid.length; x++) {
-                for (int y = 0; y < grid[x].length; y++) {
+            int x = 0;
+            int y = 0;
+            Node current = stack.get(stack.size() - 1);
+            /*
+            Coordinate memoCoord = getMemo(layer, current.getShape());
+            if (memoCoord != null) {
+                if (x != grid.length - 1) {
+                    x = memoCoord.getX() + 1;
+                    y = memoCoord.getY();
+                } else {
+                    x = 0;
+                    y = memoCoord.getY() + 1;
+                }
+            }
+            */
+
+            if (usedShapes.contains(current.getShape())) {
+                System.out.println("Shape already used! " + current.getShape());
+                stack.remove(current);
+                totalBreak = true;
+            }
+            
+            for (; x < grid.length; x++) {
+                
+                for (; y < grid[x].length && !totalBreak; y++) {
  
-                    Node current = stack.get(stack.size() - 1);
                     current.setCoord(new Coordinate(x, y));
 
-                    if (usedShapes.contains(current.getShape())) {
-                        break;
-                    }
-                    usedShapes.add(current.getShape());
-
+                    System.out.println(current + ": " + x + ", " + y);
+                    
                     Pentomino pentomino = current.getPentomino();
                     boolean noViolation = puzzleClone.addPiece(pentomino, x, y, layer);
                     if (!noViolation) {
+                        System.out.println("Violation!");
                         break;
                     }
 
@@ -134,17 +163,36 @@ public class PuzzleSolver {
                     if (layerSolved) {
                         // return list of nodes
                         initial.setEnd(current);
+                        System.out.println("Success!");
                         return initial;
                     }
-
+                    System.out.println("Shape placed.");
                     stack.remove(current);
                     current.generateChildren();
+                    usedShapes.add(current.getShape());
                     stack.addAll(current.getChildren());
+                    addMemo(layer, new Coordinate(x, y), current.getShape());
+                    totalBreak = true;
+                    break;
+                }
+                if (totalBreak == true) {
+                    break;
                 }
             }
         }
         // no solution for this layer
+        System.out.println("No solution for layer " + layer);
         return null;
+    }
+
+    public static void addMemo (int layer, Coordinate coord, PentominoShape shape) {
+        String key = shape.toString() + layer;
+        memoTable.put(key, coord);
+    }
+
+    public static Coordinate getMemo (int layer, PentominoShape shape) {
+        String key = shape.toString() + layer;
+        return memoTable.get(key);
     }
     
     /*
