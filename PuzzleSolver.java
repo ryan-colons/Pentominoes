@@ -5,9 +5,6 @@ import java.util.*;
 public class PuzzleSolver {
 
     public static ArrayList<PentominoShape> availableShapes = new ArrayList<PentominoShape>();
-    public static HashMap<String, Coordinate> memoTable;
-
-    
 
     public static void main(String[] args) {
         Scanner scan = new Scanner(System.in);
@@ -32,40 +29,78 @@ public class PuzzleSolver {
         puzzles.add(makePuzzle(lines));
         
         for (Puzzle puzz : puzzles) {
-            memoTable = new HashMap<String, Coordinate>();
-            ArrayList<ArrayList<Node>> solution = solvePuzzle(puzz);
+            availableShapes = new ArrayList<PentominoShape>(Arrays.asList(PentominoShape.values()));
+            Node solution = solveLayer(puzz, puzz.getNumLayers(), null);
             if (solution == null) {
                 System.out.println("IMPOSSIBLE!");
             } else {
-                int[][] grid = puzz.getGridClone();
-                for (ArrayList<Node> layer : solution) {
-                    String[][] to_print = new String[grid.length][grid[0].length];
-                    for (Node node : layer) {
-                        Pentomino pentomino = node.getPentomino();
-                        Coordinate origin = node.getCoord();
-                        for (Coordinate coord : pentomino.determineBlocks(origin.getX(), origin.getY())) {
-                            to_print[coord.getX()][coord.getY()] = node.getShape().toString();
-                        }
-                    }
-                    for (int x = 0; x < to_print.length; x++) {
-                        for (int y = 0; y < to_print[x].length; y++) {
-                            if (to_print == null) {
+                ArrayList<Node> solutionNodes = new ArrayList<Node>();
+                Node current = solution;
+                while (current != null) {
+                    solutionNodes.add(current);
+                    current = current.getGodParent();
+                }
+                for (Node solutionNode : solutionNodes) {
+                    BoardTile[][] boardTiles = solutionNode.getState();
+                    for (int x = 0; x < boardTiles.length; x++) {
+                        for (int y = 0; y < boardTiles[x].length; y++) {
+                            if (boardTiles[x][y] == null) {
                                 System.out.print(".");
                             } else {
-                                System.out.print(to_print[x][y]);
+                                System.out.print(boardTiles[x][y]);
                             }
                         }
                         System.out.println();
                     }
+                    System.out.println();
+                    System.out.println();
                 }
+                
             }
-            System.out.println();
-            System.out.println();
         }
     }
 
-    public static ArrayList<ArrayList<Node>> solvePuzzle (Puzzle puzzle) {
-        // set available shapes
+    public static Node solveLayer (Puzzle puzzle, int layer, Node godParent) {
+        if (layer == 0) {
+            return godParent;
+        }
+        System.out.println("Attempting to solve layer " + layer);
+        Node root = new Node(null, puzzle.getGridClone(), puzzle.getBoardTiles(), availableShapes, null);
+        root.makeChildren();
+        ArrayList<Node> children = root.getChildren();
+        ArrayList<Node> stack = new ArrayList<Node>();
+        stack.addAll(children);
+        while (stack.size() > 0) {
+            //System.out.println("Stack: " + stack);
+            Node current = stack.get(stack.size() - 1);
+            System.out.println("Remaining: " + current.getRemainingShapes());
+            availableShapes = current.getRemainingShapes();
+
+            System.out.println(current.getPentomino());
+                
+            Puzzle currentPuzzle = new Puzzle(current.getGrid(), current.getState());
+            if (currentPuzzle.finishedAtLayer(layer)) {
+                System.out.println(currentPuzzle);
+                Node solution = solveLayer(currentPuzzle, layer - 1, current);
+                if (solution != null) {
+                    System.out.println("FULLY SOLVED!");
+                    return solution;
+                } else {
+                    System.out.println("PARTIALLY SOLVED");
+                }
+            }
+
+            current.makeChildren();
+            stack.addAll(current.getChildren());
+            stack.remove(current);
+            //System.out.println("New stack: " + stack);
+        }
+        return null;
+    }
+        
+
+
+        /* // set available shapes
         availableShapes.clear();
         for (PentominoShape shape : PentominoShape.values()) {
             availableShapes.add(shape);
@@ -85,9 +120,10 @@ public class PuzzleSolver {
             } else {
                 // set solution, continue to next layer
                 solutions[i] = solveLayer(puzzle, i);
-            }
-            
+                }
         }
+            
+        
 
         ArrayList<ArrayList<Node>> to_return = new ArrayList<ArrayList<Node>>();
         for (int i = 0; i < solutions.length; i++) {
@@ -103,7 +139,7 @@ public class PuzzleSolver {
         return to_return;
     }
 
-    public static Node solveLayer (Puzzle puzzle, int layer) {
+    /* public static Node solveLayer (Puzzle puzzle, int layer) {
         Puzzle puzzleClone = puzzle.getClone();
         ArrayList<Pentomino> allPentominoes = new ArrayList<Pentomino>();
         for (PentominoShape shape : PentominoShape.values()) {
@@ -136,7 +172,7 @@ public class PuzzleSolver {
                     y = memoCoord.getY() + 1;
                 }
             }
-            */
+            
 
             if (usedShapes.contains(current.getShape())) {
                 System.out.println("Shape already used! " + current.getShape());
@@ -183,17 +219,7 @@ public class PuzzleSolver {
         // no solution for this layer
         System.out.println("No solution for layer " + layer);
         return null;
-    }
-
-    public static void addMemo (int layer, Coordinate coord, PentominoShape shape) {
-        String key = shape.toString() + layer;
-        memoTable.put(key, coord);
-    }
-
-    public static Coordinate getMemo (int layer, PentominoShape shape) {
-        String key = shape.toString() + layer;
-        return memoTable.get(key);
-    }
+    }*/
     
     /*
     public boolean solveLayer (Puzzle puzzle, int layer) {

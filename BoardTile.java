@@ -6,10 +6,10 @@ public class BoardTile {
     private Coordinate position;
     private int layer;
 
-    public BoardTile (int x, int y, int l) {
+    public BoardTile (int x, int y, int l, PentominoShape shape) {
         position = new Coordinate(x, y);
         layer = l;
-        occupyingPentomino = null;
+        occupyingPentomino = shape; 
     }
 
     public boolean isAvailable (int[][] grid) {

@@ -23,7 +23,8 @@ public class Puzzle {
             }
         }
         grid = intGrid;
-        setDisplayBoard();
+        boardTiles = new BoardTile[grid.length][grid[0].length];
+        System.out.println(this);
     }
 
     public Puzzle(int[][] cloneGrid, BoardTile[][] cloneTiles) {
@@ -32,7 +33,13 @@ public class Puzzle {
     }
 
     public int[][] getGridClone () {
-        return grid.clone();
+        int[][] gridClone = new int[grid.length][grid[0].length];
+        for (int x = 0; x < grid.length; x++) {
+            for (int y = 0; y < grid[0].length; y++) {
+                gridClone[x][y] = grid[x][y];
+            }
+        }
+        return gridClone;
     }
 
     public Puzzle getClone () {
@@ -41,20 +48,11 @@ public class Puzzle {
     }
 
     public boolean finishedAtLayer (int layer) {
+        System.out.println("Check if finished:");
+        System.out.println(this);
         for (int x = 0; x < grid.length; x++) {
             for (int y = 0; y < grid[x].length; y++) {
                 if (grid[x][y] == layer) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-    public boolean finishedAtLayer (int layer, int[][] testGrid) {
-        for (int x = 0; x < testGrid.length; x++) {
-            for (int y = 0; y < testGrid[x].length; y++) {
-                if (testGrid[x][y] == layer) {
                     return false;
                 }
             }
@@ -80,10 +78,14 @@ public class Puzzle {
         boolean violation = isViolation(blocks, layer);
         if (!violation) {
             // add piece
+            //System.out.println("We will now add a piece...");
+            //System.out.println(this);
             for (Coordinate coord : blocks) {
-                grid[coord.getX()][coord.getY()]--; 
+                grid[coord.getX()][coord.getY()]--;
+                boardTiles[coord.getX()][coord.getY()] = new BoardTile(x, y, layer, pentomino.getShape());
             }
-            //PuzzleSolver.availableShapes.remove(pentomino.getShape());
+            //System.out.println("We have added a piece!");
+            //System.out.println(this);
             return true;
         } else {
             return false;
@@ -98,14 +100,20 @@ public class Puzzle {
                 //System.out.println("Out of grid!");
                 return true;
             }
-            if (boardTiles[x][y].getPentomino() != null) {
-                if (boardTiles[x][y].getLayer() == layer) {
-                    //System.out.println("Space is already occupied!");
-                    return true;
+            if (grid[x][y] == 0) {
+                //System.out.println("Nothing should be placed here!");
+                return true;
+            }
+            if (boardTiles[x][y] != null) {
+                if (boardTiles[x][y].getPentomino() != null) {
+                    if (boardTiles[x][y].getLayer() == layer) {
+                        //System.out.println("Space is already occupied!");
+                        return true;
+                    }
                 }
             }
         }
-        int[][] gridClone = grid.clone();
+        int[][] gridClone = getGridClone();
         for (Coordinate coord : blocks) {
             gridClone[coord.getX()][coord.getY()]--; 
         }
@@ -172,30 +180,15 @@ public class Puzzle {
         return true;
     }
 
-    // this does not work properly
-    public void setDisplayBoard () {
-        if (grid == null || grid.length == 0) {
-            System.out.println("Nothing to display!");
-            return;
-        }
-        boardTiles = new BoardTile[grid.length][];
-        for (int i = 0; i < boardTiles.length; i++) {
-            boardTiles[i] = new BoardTile[grid[i].length];
-            for (int j = 0; j < boardTiles[i].length; j++) {
-                boardTiles[i][j] = new BoardTile(i, j, 0);
-            }
-        }
-    }
-
     public BoardTile[][] getBoardTiles () {
         return boardTiles;
     }
 
     public String toString () {
         String returnString = "";
-        for (int x = 0; x < boardTiles.length; x++) {
-            for (int y = 0; y < boardTiles[x].length; y++) {
-                returnString += boardTiles[x][y] + " ";
+        for (int x = 0; x < grid.length; x++) {
+            for (int y = 0; y < grid[x].length; y++) {
+                returnString += grid[x][y] + " ";
             }
             returnString += "\n";
         }
