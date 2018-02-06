@@ -23,7 +23,7 @@ public class Puzzle {
             }
         }
         grid = intGrid;
-        //setDisplayBoard();
+        setDisplayBoard();
     }
 
     public Puzzle(int[][] cloneGrid, BoardTile[][] cloneTiles) {
@@ -38,6 +38,17 @@ public class Puzzle {
     public Puzzle getClone () {
         Puzzle clonePuzzle = new Puzzle(grid, boardTiles);
         return clonePuzzle;
+    }
+
+    public boolean finishedAtLayer (int layer) {
+        for (int x = 0; x < grid.length; x++) {
+            for (int y = 0; y < grid[x].length; y++) {
+                if (grid[x][y] == layer) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     public boolean finishedAtLayer (int layer, int[][] testGrid) {
@@ -119,7 +130,7 @@ public class Puzzle {
         ArrayList<Coordinate> validated = new ArrayList<Coordinate>();
         for (int x = 0; x < testGrid.length; x++) {
             int count = 0;
-            for (int y = 0; y < testGrid.length; y++) {
+            for (int y = 0; y < testGrid[x].length; y++) {
                 boolean foundEnough = false;
                 Coordinate newCoord = new Coordinate(x, y);
                 if (!validated.contains(newCoord) && testGrid[x][y] != 0) {
@@ -160,7 +171,8 @@ public class Puzzle {
         }
         return true;
     }
-    
+
+    // this does not work properly
     public void setDisplayBoard () {
         if (grid == null || grid.length == 0) {
             System.out.println("Nothing to display!");
@@ -170,7 +182,7 @@ public class Puzzle {
         for (int i = 0; i < boardTiles.length; i++) {
             boardTiles[i] = new BoardTile[grid[i].length];
             for (int j = 0; j < boardTiles[i].length; j++) {
-                boardTiles[i][j] = new BoardTile(i, j);
+                boardTiles[i][j] = new BoardTile(i, j, 0);
             }
         }
     }

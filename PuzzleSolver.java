@@ -28,34 +28,132 @@ public class PuzzleSolver {
 
         puzzles.add(makePuzzle(lines));
         
-        System.out.println("PUZZLES:");
         for (Puzzle puzz : puzzles) {
-            System.out.println(puzz);
+            ArrayList<ArrayList<Node>> solution = solvePuzzle(puzz);
+            if (solution == null) {
+                System.out.println("IMPOSSIBLE!");
+            } else {
+                int[][] grid = puzz.getGridClone();
+                for (ArrayList<Node> layer : solution) {
+                    String[][] to_print = new String[grid.length][grid[0].length];
+                    for (Node node : layer) {
+                        Pentomino pentomino = node.getPentomino();
+                        Coordinate origin = node.getCoord();
+                        for (Coordinate coord : pentomino.determineBlocks(origin.getX(), origin.getY())) {
+                            to_print[coord.getX()][coord.getY()] = node.getShape().toString();
+                        }
+                    }
+                    for (int x = 0; x < to_print.length; x++) {
+                        for (int y = 0; y < to_print[x].length; y++) {
+                            if (to_print == null) {
+                                System.out.print(".");
+                            } else {
+                                System.out.print(to_print[x][y]);
+                            }
+                        }
+                        System.out.println();
+                    }
+                }
+            }
         }
     }
 
-    public BoardTile[][] solvePuzzle (Puzzle puzzle) {
-        //BoardTile[][] solution = puzzle.getBoardTiles();
-
+    public static ArrayList<ArrayList<Node>> solvePuzzle (Puzzle puzzle) {
+        // set available shapes
         availableShapes.clear();
         for (PentominoShape shape : PentominoShape.values()) {
             availableShapes.add(shape);
         }
 
         int numLayers = puzzle.getNumLayers();
-        boolean solved = solveLayer(puzzle, numLayers);
+        Node[] solutions = new Node[numLayers];
+        for (int i = numLayers; i > 0; i--) {
+            Node solutionRoot = solveLayer(puzzle, i);
+            if (solutionRoot == null) {
+                // go back to previous layer
+                if (i == numLayers) {
+                    return null;
+                }
+                i += 2;
+            } else {
+                // set solution, continue to next layer
+                solutions[i] = solveLayer(puzzle, i);
+            }
+            
+        }
 
-        
-        
-        return null;
+        ArrayList<ArrayList<Node>> to_return = new ArrayList<ArrayList<Node>>();
+        for (int i = 0; i < solutions.length; i++) {
+            ArrayList<Node> successfulNodes = new ArrayList<Node>();
+            Node current = solutions[i].successfulNode();
+            successfulNodes.add(current);
+            while (current.getParent() != null) {
+                current = current.getParent();
+                successfulNodes.add(current);
+            }
+            to_return.add(successfulNodes);
+        }
+        return to_return;
     }
 
+    public static Node solveLayer (Puzzle puzzle, int layer) {
+        Puzzle puzzleClone = puzzle.getClone();
+        ArrayList<Pentomino> allPentominoes = new ArrayList<Pentomino>();
+        for (PentominoShape shape : PentominoShape.values()) {
+            allPentominoes.addAll(getUniqueForms(shape));
+        }
+        ArrayList<PentominoShape> usedShapes = new ArrayList<PentominoShape>();
+        
+        Node initial = new Node(allPentominoes);
+        ArrayList<Node> stack = new ArrayList<Node>();
+        stack.addAll(initial.getChildren());
+
+        int[][] grid = puzzleClone.getGridClone();
+        
+        while (stack.size() > 0) {
+            System.out.println("STACK SIZE: " + stack.size());
+            
+            for (int x = 0; x < grid.length; x++) {
+                for (int y = 0; y < grid[x].length; y++) {
+ 
+                    Node current = stack.get(stack.size() - 1);
+                    current.setCoord(new Coordinate(x, y));
+
+                    if (usedShapes.contains(current.getShape())) {
+                        break;
+                    }
+                    usedShapes.add(current.getShape());
+
+                    Pentomino pentomino = current.getPentomino();
+                    boolean noViolation = puzzleClone.addPiece(pentomino, x, y, layer);
+                    if (!noViolation) {
+                        break;
+                    }
+
+                    boolean layerSolved = puzzleClone.finishedAtLayer(layer);
+                    if (layerSolved) {
+                        // return list of nodes
+                        initial.setEnd(current);
+                        return initial;
+                    }
+
+                    stack.remove(current);
+                    current.generateChildren();
+                    stack.addAll(current.getChildren());
+                }
+            }
+        }
+        // no solution for this layer
+        return null;
+    }
+    
+    /*
     public boolean solveLayer (Puzzle puzzle, int layer) {
         if (layer == 0) {
             return true;
         }
 
-        ArrayList<PentominoShape> shapesClone = availableShapes.clone();
+        ArrayList<PentominoShape> shapesClone = (ArrayList<PentominoShape>)availableShapes.clone();
         boolean solvedPuzzle = false;
         
         ArrayList<BoardTile[][]> layouts = getLayouts(puzzle, layer);
@@ -76,7 +174,7 @@ public class PuzzleSolver {
                     }
                 }
                 solvedPuzzle = solveLayer(puzzle, layer - 1);
-                }*/
+                }
         }
             
         
@@ -90,31 +188,32 @@ public class PuzzleSolver {
         ArrayList<ArrayList<PentominoShape>> permutations = getPermutations(new ArrayList<PentominoShape>());
         for(ArrayList<PentominoShape> permutation : permutations){
             Puzzle clonePuzzle = puzzle.getClone();
-            cloneGrid = puzzle.getCloneGrid();
-            BoardTiles[][] board = new BoardTiles[cloneGrid.length][cloneGrid[0].length];
+            int[][] cloneGrid = puzzle.getGridClone();
+            BoardTile[][] board = new BoardTile[cloneGrid.length][cloneGrid[0].length];
             boolean lastCheck = false;
                 
-                for(PentominoShape shape : permutation){
-                    if(shape == permutation.get(0)){
-                        int a = layouts.size() / cloneGrid.length;
-                        int b = layouts.size() % cloneGrid[0].length;
-                    }
-                    for(int x = 0; x < cloneGrid.length; x++){
-                        for(int y = 0; y < cloneGrid[x].length; y++){
-                            clonePuzzle.addPiece(shape, x, y, layer);
+            for(PentominoShape shape : permutation){
+                if(shape == permutation.get(0)){
+                    int a = layouts.size() / cloneGrid.length;
+                    int b = layouts.size() % cloneGrid[0].length;
+                }
+                for(int x = 0; x < cloneGrid.length; x++){
+                    for(int y = 0; y < cloneGrid[x].length; y++){
+                        //clonePuzzle.addPiece(shape, x, y, layer);
                             
-                        }
                     }
                 }
-                layouts.add(clonePuzzle.getBoardTiles());
             }
+            layouts.add(clonePuzzle.getBoardTiles());
         }
-        
         return layouts;
     }
+*/
+    
+    /*
 
     public ArrayList<ArrayList<PentominoShape>> getPermutations(ArrayList<PentominoShape> initial){
-        ArrayList<PentominoShape> cloneShapes = availableShapes.clone();
+        ArrayList<PentominoShape> cloneShapes = (ArrayList<PentominoShape>)availableShapes.clone();
         ArrayList<ArrayList<PentominoShape>> toReturn = new ArrayList<ArrayList<PentominoShape>>();
         toReturn.add(initial);
         for(PentominoShape shape : cloneShapes){
@@ -124,7 +223,8 @@ public class PuzzleSolver {
             toReturn.addAll(getPermutations(toAdd));
             availableShapes = cloneShapes;
         }
-    }        
+    }
+    */
 
     public static Puzzle makePuzzle (ArrayList<String[]> lines) {
         if (lines.size() == 0) {
