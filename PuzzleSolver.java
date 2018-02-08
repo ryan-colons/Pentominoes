@@ -57,6 +57,9 @@ public class PuzzleSolver {
                 }
                 
             }
+            // remove this later pls
+            // it means we only look at the first puzzle
+            return;
         }
     }
 
@@ -71,14 +74,14 @@ public class PuzzleSolver {
         ArrayList<Node> stack = new ArrayList<Node>();
         stack.addAll(children);
         while (stack.size() > 0) {
-            //System.out.println("Stack: " + stack);
+            System.out.println("Stack:            " + stack.size());
             Node current = stack.get(stack.size() - 1);
-            System.out.println("Remaining: " + current.getRemainingShapes());
+            System.out.println("Remaining shapes: " + current.getRemainingShapes().size());
             availableShapes = current.getRemainingShapes();
 
-            System.out.println(current.getPentomino());
-                
+            
             Puzzle currentPuzzle = new Puzzle(current.getGrid(), current.getState());
+            current.printBoardState();
             if (currentPuzzle.finishedAtLayer(layer)) {
                 System.out.println(currentPuzzle);
                 Node solution = solveLayer(currentPuzzle, layer - 1, current);
@@ -93,8 +96,8 @@ public class PuzzleSolver {
             current.makeChildren();
             stack.addAll(current.getChildren());
             stack.remove(current);
-            //System.out.println("New stack: " + stack);
         }
+        System.out.println("NO SOLUTION FOUND AT LAYER " + layer);
         return null;
     }
         

@@ -48,8 +48,8 @@ public class Puzzle {
     }
 
     public boolean finishedAtLayer (int layer) {
-        System.out.println("Check if finished:");
-        System.out.println(this);
+        //System.out.println("Check if finished:");
+        //System.out.println(this);
         for (int x = 0; x < grid.length; x++) {
             for (int y = 0; y < grid[x].length; y++) {
                 if (grid[x][y] == layer) {
@@ -137,8 +137,8 @@ public class Puzzle {
     public boolean checkAllSpaces (int[][] testGrid) {
         ArrayList<Coordinate> validated = new ArrayList<Coordinate>();
         for (int x = 0; x < testGrid.length; x++) {
-            int count = 0;
             for (int y = 0; y < testGrid[x].length; y++) {
+                int count = 0;
                 boolean foundEnough = false;
                 Coordinate newCoord = new Coordinate(x, y);
                 if (!validated.contains(newCoord) && testGrid[x][y] != 0) {
@@ -147,36 +147,55 @@ public class Puzzle {
                     queue.add(new Coordinate(x,y));
                     
                     while (queue.size() > 0) {
+                        
                         count += 1;
+                        /*
                         if (count >= 5) {
+                            //System.out.println("Found 5 ... count = " + count);
                             validated.addAll(visited);
                             foundEnough = true;
                             break;
                         }
+                        */
                         Coordinate coord = queue.remove(0);
+                        if (visited.contains(coord)) {
+                            System.out.println("Revisit!");
+                        }
+                        //System.out.println(coord + "| " + queue);
+                        //System.out.println("     Visited: " + visited);
+                        
                         visited.add(coord);
-                        // add each neighbour to the queue
                         Coordinate[] neighbours = new Coordinate[]{
-                            new Coordinate(x + 1, y),
-                            new Coordinate(x - 1, y),
-                            new Coordinate(x, y + 1),
-                            new Coordinate(x, y - 1)
+                            new Coordinate(coord.getX() + 1, coord.getY()),
+                            new Coordinate(coord.getX() - 1, coord.getY()),
+                            new Coordinate(coord.getX(), coord.getY() + 1),
+                            new Coordinate(coord.getX(), coord.getY() - 1)
                         };
                         for (Coordinate neighbour : neighbours) {
-                            if (!outOfBounds(neighbour) && !visited.contains(neighbour)) {
+                            if (!outOfBounds(neighbour) && !visited.contains(neighbour) && !queue.contains(neighbour)) {
                                 if (testGrid[neighbour.getX()][neighbour.getY()] != 0) {
                                     queue.add(neighbour);
+                                    //System.out.println("     Adding: " + neighbour);
                                 }
                             }
                         }
                     }
-
+                    if (count % 5 == 0) {
+                        validated.addAll(visited);
+                        foundEnough = true;
+                    }
                     if (!foundEnough) {
+                        //System.out.println("All spaces checked: FAILED! Bad board below:");
+                        //Puzzle to_print = new Puzzle(testGrid, new BoardTile[0][0]);
+                        //System.out.println(to_print);
                         return false;
                     }
                 }
             }
         }
+        //System.out.println("All spaces checked: PASSED! Good board below:");
+        //Puzzle to_print = new Puzzle(testGrid, new BoardTile[0][0]);
+        //System.out.println(to_print);
         return true;
     }
 

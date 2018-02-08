@@ -84,13 +84,15 @@ public class Node {
                             ArrayList<PentominoShape> newRemaining = new ArrayList<PentominoShape>(remainingShapes);
                             newRemaining.remove(pentominoShape);
                             if(clonePuzzle.addPiece(p, x, y, 1)){
-                                children.add(new Node(this.godParent, clonePuzzle.getGridClone(), clonePuzzle.getBoardTiles(), newRemaining, pentominoShape));
+                                Node newChild = new Node(this.godParent, clonePuzzle.getGridClone(), clonePuzzle.getBoardTiles(), newRemaining, pentominoShape);
+                                children.add(newChild);
+                                //System.out.println("Resulting child:");
+                                //newChild.printBoardState();
                             }
                         }
                     }
                 }
             }
-            break;
         }
         //System.out.println("CHILDREN BOARD STATES: ");
         //for (Node child : children) {

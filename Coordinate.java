@@ -46,8 +46,10 @@ public class Coordinate implements Comparable<Coordinate>{
         }
         return 0;
     }
-    
-    public boolean equals (Coordinate otherCoord) {
+
+    @Override
+    public boolean equals (Object other) {
+        Coordinate otherCoord = (Coordinate)other;
         int otherX = (otherCoord.getX());
         int otherY = (otherCoord.getY());
 
