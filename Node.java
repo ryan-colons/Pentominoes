@@ -4,19 +4,23 @@ import java.util.*;
 
 public class Node {
 
+    private static HashMap<String, Node> memo = new HashMap<String, Node>(); 
+    
     private int[][] grid;
     private Node godParent;
-    private ArrayList<Node> children = new ArrayList<Node>();
+    //private ArrayList<Node> children = new ArrayList<Node>();
     private BoardTile[][] boardState;
     private ArrayList<PentominoShape> remainingShapes;
     private PentominoShape pentomino;
+    private int layer;
 
-    public Node (Node godParent, int[][] board, BoardTile[][] state, ArrayList<PentominoShape> remaining, PentominoShape prev) {
+    public Node (Node godParent, int[][] board, BoardTile[][] state, ArrayList<PentominoShape> remaining, PentominoShape prev, int layer) {
         this.grid = board;
         this.godParent = godParent;
         this.boardState = state;
         this.remainingShapes = remaining;
         this.pentomino = prev;
+        this.layer = layer;
     }
 
     public int[][] getGrid() {
@@ -27,9 +31,9 @@ public class Node {
         return this.boardState;
     }
 
-    public ArrayList<Node> getChildren(){
-        return this.children;
-    }
+    //public ArrayList<Node> getChildren(){
+    //    return this.children;
+    //}
 
     public ArrayList<PentominoShape> getRemainingShapes() {
         return remainingShapes;
@@ -64,42 +68,45 @@ public class Node {
         System.out.println();
     }
 
-    public void makeChildren(){
-        ArrayList<PentominoShape> usedPentominos = new ArrayList<PentominoShape>();
-        for(int i = 0; i < grid.length; i++){
-            for(int j = 0; j < grid[i].length; j++){
-                if (boardState[i][j] != null) {
-                    if(!usedPentominos.contains(boardState[i][j].getPentomino())){
-                        usedPentominos.add(boardState[i][j].getPentomino());
-                    }
-                }
-            }
+    private static int count = 0;
+    public Node findSolution(){
+        Puzzle clonePuzzo = new Puzzle(getGridClone(), getBoardClone());
+        System.out.println(clonePuzzo);
+        printBoardState();
+        if (clonePuzzo.finishedAtLayer(layer)) {
+            return this;
         }
+            
         for(PentominoShape pentominoShape : remainingShapes){
-            if(!usedPentominos.contains(pentominoShape)){
-                for(int x = 0; x < grid.length; x++){
-                    for(int y = 0; y < grid[x].length; y++){
-                        for(Pentomino p : PuzzleSolver.getUniqueForms(pentominoShape)){
-                            Puzzle clonePuzzle = new Puzzle(getGridClone(), getBoardClone());
-                            ArrayList<PentominoShape> newRemaining = new ArrayList<PentominoShape>(remainingShapes);
-                            newRemaining.remove(pentominoShape);
-                            if(clonePuzzle.addPiece(p, x, y, 1)){
-                                Node newChild = new Node(this.godParent, clonePuzzle.getGridClone(), clonePuzzle.getBoardTiles(), newRemaining, pentominoShape);
-                                children.add(newChild);
-                                //System.out.println("Resulting child:");
-                                //newChild.printBoardState();
+            for(int x = 0; x < grid.length; x++){
+                for(int y = 0; y < grid[x].length; y++){
+                    for(Pentomino p : PuzzleSolver.getUniqueForms(pentominoShape)){
+                        Puzzle clonePuzzle = new Puzzle(getGridClone(), getBoardClone());
+                        ArrayList<PentominoShape> newRemaining = new ArrayList<PentominoShape>(remainingShapes);
+                        newRemaining.remove(pentominoShape);
+                        if(clonePuzzle.addPiece(p, x, y, layer)){
+                            String boardString = BoardTile.arrayToString(clonePuzzle.getBoardTiles());
+                            Node newChild = new Node(this.godParent, clonePuzzle.getGridClone(), clonePuzzle.getBoardTiles(), newRemaining, pentominoShape, layer);
+                            if (memo.containsKey(boardString)) {
+                                if (memo.get(boardString) == null) {
+                                    System.out.println("Get board string: null");
+                                }
+                                System.out.println("RETRIEVING FROM " + boardString);
+                                return memo.get(boardString);
+                            } else {
+                                //System.out.println("STORING AT " + boardString);
+                                memo.put(boardString, newChild.findSolution());
+                                if(memo.get(boardString) != null){
+                                    return memo.get(boardString);
+                                }
                             }
                         }
                     }
                 }
-            }
+            }   
         }
-        //System.out.println("CHILDREN BOARD STATES: ");
-        //for (Node child : children) {
-        //    child.printBoardState();
-        //}
-        
-        return;
+        System.out.println("Reached the bottom");
+        return null;
     }
 
     public int[][] getGridClone () {

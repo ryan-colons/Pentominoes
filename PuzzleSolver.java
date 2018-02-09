@@ -68,37 +68,16 @@ public class PuzzleSolver {
             return godParent;
         }
         System.out.println("Attempting to solve layer " + layer);
-        Node root = new Node(null, puzzle.getGridClone(), puzzle.getBoardTiles(), availableShapes, null);
-        root.makeChildren();
-        ArrayList<Node> children = root.getChildren();
-        ArrayList<Node> stack = new ArrayList<Node>();
-        stack.addAll(children);
-        while (stack.size() > 0) {
-            System.out.println("Stack:            " + stack.size());
-            Node current = stack.get(stack.size() - 1);
-            System.out.println("Remaining shapes: " + current.getRemainingShapes().size());
-            availableShapes = current.getRemainingShapes();
+        Node root = new Node(null, puzzle.getGridClone(), puzzle.getBoardTiles(), availableShapes, null, layer);
+        Node solution = root.findSolution();
 
-            
-            Puzzle currentPuzzle = new Puzzle(current.getGrid(), current.getState());
-            current.printBoardState();
-            if (currentPuzzle.finishedAtLayer(layer)) {
-                System.out.println(currentPuzzle);
-                Node solution = solveLayer(currentPuzzle, layer - 1, current);
-                if (solution != null) {
-                    System.out.println("FULLY SOLVED!");
-                    return solution;
-                } else {
-                    System.out.println("PARTIALLY SOLVED");
-                }
-            }
-
-            current.makeChildren();
-            stack.addAll(current.getChildren());
-            stack.remove(current);
+        if (solution == null) {
+            System.out.println("NO SOLUTION FOUND AT LAYER " + layer);
+            return null;
+        } else {
+            Puzzle solutionPuzzle = new Puzzle(solution.getGridClone(), solution.getBoardClone());
+            return solveLayer(solutionPuzzle, layer - 1, solution);
         }
-        System.out.println("NO SOLUTION FOUND AT LAYER " + layer);
-        return null;
     }
         
 

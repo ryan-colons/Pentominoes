@@ -41,5 +41,19 @@ public class BoardTile {
     public String toString () {
         return occupyingPentomino.toString();
     }
+
+    public static String arrayToString (BoardTile[][] array) {
+        String result = "";
+        for (int x = 0; x < array.length; x++) {
+            for (int y = 0; y < array[x].length; y++) {
+                if (array[x][y] != null) {
+                    result += array[x][y].toString();
+                } else {
+                    result += ".";
+                }
+            }
+        }
+        return result;
+    }
     
 }
