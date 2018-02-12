@@ -1,6 +1,7 @@
 package pentominoes;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 public class PuzzleSolver {
 
@@ -40,6 +41,7 @@ public class PuzzleSolver {
                     solutionNodes.add(current);
                     current = current.getGodParent();
                 }
+                System.out.println("\nHere is the solution:\n");
                 for (Node solutionNode : solutionNodes) {
                     BoardTile[][] boardTiles = solutionNode.getState();
                     for (int x = 0; x < boardTiles.length; x++) {
@@ -62,21 +64,41 @@ public class PuzzleSolver {
             return;
         }
     }
-
+    
     public static Node solveLayer (Puzzle puzzle, int layer, Node godParent) {
         if (layer == 0) {
+            System.out.println("Layer 0 reached: returning godparent");
             return godParent;
         }
         System.out.println("Attempting to solve layer " + layer);
-        Node root = new Node(null, puzzle.getGridClone(), puzzle.getBoardTiles(), availableShapes, null, layer);
+        Node root = new Node(godParent, puzzle.getGridClone(), puzzle.getBoardTiles(), availableShapes, null, layer);
         Node solution = root.findSolution();
+        
 
         if (solution == null) {
             System.out.println("NO SOLUTION FOUND AT LAYER " + layer);
             return null;
         } else {
             Puzzle solutionPuzzle = new Puzzle(solution.getGridClone(), solution.getBoardClone());
-            return solveLayer(solutionPuzzle, layer - 1, solution);
+            availableShapes = solution.getRemainingShapes();
+
+            System.out.println(solutionPuzzle);
+            
+            for (int i = 9; i >= 0; i--) {
+                if (!solutionPuzzle.finishedAtLayer(i)) {
+                    System.out.println("Not finished at layer " + i);
+                }
+            }
+            
+            
+            System.out.println("SOLUTION FOUND FOR LAYER " + layer);
+            //try {
+            //    TimeUnit.SECONDS.sleep(10);
+            //} catch (InterruptedException e) {
+            //    System.out.println("INTERRUPTED EXCEPTION");
+            //}
+            //return solveLayer(solutionPuzzle, layer - 1, solution);
+            return solution;
         }
     }
         

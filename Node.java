@@ -54,11 +54,21 @@ public class Node {
         return pentomino.toString();
     }
 
+    public void printGrid () {
+        for (int x = 0; x < grid.length; x++) {
+            for (int y = 0; y < grid[x].length; y++) {
+                System.out.print(grid[x][y]);
+            }
+            System.out.println();
+        }
+        System.out.println();
+    }
+    
     public void printBoardState () {
         for (int x = 0; x < boardState.length; x++) {
             for (int y = 0; y < boardState[x].length; y++) {
                 if (boardState[x][y] == null) {
-                    System.out.print(".");
+                    System.out.print(grid[x][y]);
                 } else {
                     System.out.print(boardState[x][y]);
                 }
@@ -67,37 +77,38 @@ public class Node {
         }
         System.out.println();
     }
-
-    private static int count = 0;
     public Node findSolution(){
-        Puzzle clonePuzzo = new Puzzle(getGridClone(), getBoardClone());
-        System.out.println(clonePuzzo);
-        printBoardState();
-        if (clonePuzzo.finishedAtLayer(layer)) {
+        Puzzle clonePuzzle = new Puzzle(getGridClone(), getBoardClone());
+        //System.out.println(clonePuzzle);
+        //printBoardState();
+        if (clonePuzzle.finishedAtLayer(layer)) {
             return this;
         }
-            
+        
         for(PentominoShape pentominoShape : remainingShapes){
             for(int x = 0; x < grid.length; x++){
                 for(int y = 0; y < grid[x].length; y++){
                     for(Pentomino p : PuzzleSolver.getUniqueForms(pentominoShape)){
-                        Puzzle clonePuzzle = new Puzzle(getGridClone(), getBoardClone());
+                        clonePuzzle = new Puzzle(getGridClone(), getBoardClone());
                         ArrayList<PentominoShape> newRemaining = new ArrayList<PentominoShape>(remainingShapes);
                         newRemaining.remove(pentominoShape);
                         if(clonePuzzle.addPiece(p, x, y, layer)){
                             String boardString = BoardTile.arrayToString(clonePuzzle.getBoardTiles());
                             Node newChild = new Node(this.godParent, clonePuzzle.getGridClone(), clonePuzzle.getBoardTiles(), newRemaining, pentominoShape, layer);
                             if (memo.containsKey(boardString)) {
-                                if (memo.get(boardString) == null) {
-                                    System.out.println("Get board string: null");
+                                if (memo.get(boardString) != null) {
+                                    return memo.get(boardString);
                                 }
-                                System.out.println("RETRIEVING FROM " + boardString);
-                                return memo.get(boardString);
                             } else {
                                 //System.out.println("STORING AT " + boardString);
                                 memo.put(boardString, newChild.findSolution());
                                 if(memo.get(boardString) != null){
-                                    return memo.get(boardString);
+                                    Node childNode = memo.get(boardString);
+                                    Puzzle nextLayerPuzzle = new Puzzle(childNode.getGridClone(), childNode.getBoardClone());
+                                    Node nextLayerSolution = PuzzleSolver.solveLayer(nextLayerPuzzle, layer - 1, childNode);
+                                    if (nextLayerSolution != null) {
+                                        return nextLayerSolution;
+                                    }
                                 }
                             }
                         }
@@ -105,7 +116,7 @@ public class Node {
                 }
             }   
         }
-        System.out.println("Reached the bottom");
+        //System.out.println("Processed all children of " + BoardTile.arrayToString(this.boardState));
         return null;
     }
 

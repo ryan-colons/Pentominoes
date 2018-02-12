@@ -118,6 +118,7 @@ public class Puzzle {
             gridClone[coord.getX()][coord.getY()]--; 
         }
         if (!checkAllSpaces(gridClone)) {
+            //System.out.println("Not enough (or too many) contiguous spaces!");
             return true;
         }
         return false;
@@ -149,18 +150,16 @@ public class Puzzle {
                     while (queue.size() > 0) {
                         
                         count += 1;
-                        /*
+                        
                         if (count >= 5) {
                             //System.out.println("Found 5 ... count = " + count);
                             validated.addAll(visited);
                             foundEnough = true;
                             break;
                         }
-                        */
+                        
                         Coordinate coord = queue.remove(0);
-                        if (visited.contains(coord)) {
-                            System.out.println("Revisit!");
-                        }
+                        
                         //System.out.println(coord + "| " + queue);
                         //System.out.println("     Visited: " + visited);
                         
@@ -179,10 +178,6 @@ public class Puzzle {
                                 }
                             }
                         }
-                    }
-                    if (count % 5 == 0) {
-                        validated.addAll(visited);
-                        foundEnough = true;
                     }
                     if (!foundEnough) {
                         //System.out.println("All spaces checked: FAILED! Bad board below:");
