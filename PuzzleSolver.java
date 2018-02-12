@@ -28,7 +28,6 @@ public class PuzzleSolver {
         }
 
         puzzles.add(makePuzzle(lines));
-        
         for (Puzzle puzz : puzzles) {
             availableShapes = new ArrayList<PentominoShape>(Arrays.asList(PentominoShape.values()));
             Node solution = solveLayer(puzz, puzz.getNumLayers(), null);

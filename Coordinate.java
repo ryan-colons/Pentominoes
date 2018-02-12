@@ -1,4 +1,5 @@
 package pentominoes;
+import java.util.*;
 
 /**
  * Class for representing 2D coordinates.
@@ -58,4 +59,29 @@ public class Coordinate implements Comparable<Coordinate>{
         }
         return false;
     }
+
+    public static boolean compareArrangement(ArrayList<Coordinate> c1, Coordinate[] c2) {
+        ArrayList<Coordinate> masterArrangement = new ArrayList<Coordinate>(Arrays.asList(c2));
+        for (int i = 0; i < c1.size(); i++) {
+            boolean foundOffsets = true;
+            int xOffset = c1.get(i).getX();
+            int yOffset = c1.get(i).getY();
+            for (int j = 0; j < c1.size() && foundOffsets; j++) {
+                if (j != i) {
+                    Coordinate testCoord = new Coordinate(c1.get(j).getX() - xOffset, c1.get(j).getY() - yOffset);
+                    //System.out.println("Test coord: " + testCoord);
+                    if (!masterArrangement.contains(testCoord)) {
+                        foundOffsets = false;
+                    }
+                }
+                //System.out.println("");
+            }
+            if(foundOffsets){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    
 }

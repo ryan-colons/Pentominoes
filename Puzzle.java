@@ -57,6 +57,9 @@ public class Puzzle {
                 }
             }
         }
+        if (layer == 2) {
+            return checkLayer1(getGridClone());
+        }
         return true;
     }
 
@@ -131,6 +134,63 @@ public class Puzzle {
             return true;
         }
         return false;
+    }
+
+    // return true if layer 1 is still solvable
+    public boolean checkLayer1 (int[][] testGrid) {
+        ArrayList<Coordinate> validated = new ArrayList<Coordinate>();
+        for (int x = 0; x < testGrid.length; x++) {
+            for (int y = 0; y < testGrid[x].length; y++) {
+                int count = 0;
+                boolean foundEnough = false;
+                Coordinate newCoord = new Coordinate(x, y);
+                if (!validated.contains(newCoord) && testGrid[x][y] != 0) {
+                    ArrayList<Coordinate> queue = new ArrayList<Coordinate>();
+                    ArrayList<Coordinate> visited = new ArrayList<Coordinate>();
+                    queue.add(new Coordinate(x,y));
+                    
+                    while (queue.size() > 0) {
+                        
+                        count += 1;
+                        
+                        Coordinate coord = queue.remove(0);
+                        
+                        visited.add(coord);
+                        Coordinate[] neighbours = new Coordinate[]{
+                            new Coordinate(coord.getX() + 1, coord.getY()),
+                            new Coordinate(coord.getX() - 1, coord.getY()),
+                            new Coordinate(coord.getX(), coord.getY() + 1),
+                            new Coordinate(coord.getX(), coord.getY() - 1)
+                        };
+                        for (Coordinate neighbour : neighbours) {
+                            if (!outOfBounds(neighbour) && !visited.contains(neighbour) && !queue.contains(neighbour)) {
+                                if (testGrid[neighbour.getX()][neighbour.getY()] != 0) {
+                                    queue.add(neighbour);
+                                }
+                            }
+                        }
+                    }
+                    if (count % 5 == 0) {
+                        validated.addAll(visited);
+                        foundEnough = true;
+                        if (count == 5) {
+                            for (PentominoShape shape : PuzzleSolver.availableShapes) {
+                                for (Pentomino pentomino : PuzzleSolver.getUniqueForms(shape)) {
+                                    if (Coordinate.compareArrangement(visited, pentomino.getOffsets())) {
+                                        return true;
+                                    }
+                                }
+                            }
+                            return false;
+                        }
+                    }
+                    if (!foundEnough) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
     }
 
     // return false if a space cannot be filled
