@@ -72,7 +72,6 @@ public class PuzzleSolver {
         System.out.println("Attempting to solve layer " + layer);
         Node root = new Node(godParent, puzzle.getGridClone(), puzzle.getBoardTiles(), availableShapes, null, layer);
         Node solution = root.findSolution();
-        
 
         if (solution == null) {
             System.out.println("NO SOLUTION FOUND AT LAYER " + layer);

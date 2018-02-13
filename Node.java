@@ -77,48 +77,61 @@ public class Node {
         }
         System.out.println();
     }
+    
     public Node findSolution(){
         Puzzle clonePuzzle = new Puzzle(getGridClone(), getBoardClone());
         //System.out.println(clonePuzzle);
-        //printBoardState();
+        printBoardState();
         if (clonePuzzle.finishedAtLayer(layer)) {
             return this;
         }
-        
-        for(PentominoShape pentominoShape : remainingShapes){
-            for(int x = 0; x < grid.length; x++){
-                for(int y = 0; y < grid[x].length; y++){
-                    for(Pentomino p : PuzzleSolver.getUniqueForms(pentominoShape)){
-                        clonePuzzle = new Puzzle(getGridClone(), getBoardClone());
-                        ArrayList<PentominoShape> newRemaining = new ArrayList<PentominoShape>(remainingShapes);
-                        newRemaining.remove(pentominoShape);
-                        if(clonePuzzle.addPiece(p, x, y, layer)){
-                            String boardString = BoardTile.arrayToString(clonePuzzle.getBoardTiles());
-                            Node newChild = new Node(this.godParent, clonePuzzle.getGridClone(), clonePuzzle.getBoardTiles(), newRemaining, pentominoShape, layer);
-                            if (memo.containsKey(boardString)) {
-                                if (memo.get(boardString) != null) {
-                                    return memo.get(boardString);
-                                }
-                            } else {
-                                //System.out.println("STORING AT " + boardString);
-                                memo.put(boardString, newChild.findSolution());
-                                if(memo.get(boardString) != null){
-                                    Node childNode = memo.get(boardString);
-                                    Puzzle nextLayerPuzzle = new Puzzle(childNode.getGridClone(), childNode.getBoardClone());
-                                    Node nextLayerSolution = PuzzleSolver.solveLayer(nextLayerPuzzle, layer - 1, childNode);
-                                    if (nextLayerSolution != null) {
-                                        return nextLayerSolution;
+
+        for(int x = 0; x < grid.length; x++){
+            for(int y = 0; y < grid[x].length; y++){
+                if (boardState[x][y] == null) {
+                    boolean pieceAdded = false;
+                    for(PentominoShape pentominoShape : remainingShapes){
+                        for(Pentomino p : PuzzleSolver.getUniqueForms(pentominoShape)){
+                            clonePuzzle = new Puzzle(getGridClone(), getBoardClone());
+                            ArrayList<PentominoShape> newRemaining = new ArrayList<PentominoShape>(remainingShapes);
+                            newRemaining.remove(pentominoShape);
+                            if(clonePuzzle.addPiece(p, x, y, layer, remainingShapes)){
+                                pieceAdded = true;
+                                String boardString = BoardTile.arrayToString(clonePuzzle.getBoardTiles());
+                                Node newChild = new Node(this.godParent, clonePuzzle.getGridClone(), clonePuzzle.getBoardTiles(), newRemaining, pentominoShape, layer);
+                                if (memo.containsKey(boardString)) {
+                                    if (memo.get(boardString) != null) {
+                                        return memo.get(boardString);
+                                    }
+                                } else {
+                                    //System.out.println("STORING AT " + boardString);
+                                    memo.put(boardString, newChild.findSolution());
+                                    if(memo.get(boardString) != null){
+                                        Node childNode = memo.get(boardString);
+                                        Puzzle nextLayerPuzzle = new Puzzle(childNode.getGridClone(), childNode.getBoardClone());
+                                        Node nextLayerSolution = PuzzleSolver.solveLayer(nextLayerPuzzle, layer - 1, childNode);
+                                        if (nextLayerSolution != null) {
+                                            return nextLayerSolution;
+                                        }
                                     }
                                 }
                             }
                         }
                     }
+                    if (!pieceAdded && layer == 1) {
+                        System.out.println("Couldn't place at " + x + ", " + y);
+                        return null;
+                    }
+                    
                 }
+                //System.out.println("Skipped over " + x + ", " + y);
             }   
         }
         //System.out.println("Processed all children of " + BoardTile.arrayToString(this.boardState));
         return null;
     }
+
+    
 
     public int[][] getGridClone () {
         int[][] gridClone = new int[grid.length][grid[0].length];

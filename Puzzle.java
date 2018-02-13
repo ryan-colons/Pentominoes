@@ -57,9 +57,6 @@ public class Puzzle {
                 }
             }
         }
-        if (layer == 2) {
-            return checkLayer1(getGridClone());
-        }
         return true;
     }
 
@@ -76,9 +73,9 @@ public class Puzzle {
     }
 
     // return true iff successful
-    public boolean addPiece (Pentomino pentomino, int x, int y, int layer) {
+    public boolean addPiece (Pentomino pentomino, int x, int y, int layer, ArrayList<PentominoShape> remainingShapes) {
         Coordinate[] blocks = pentomino.determineBlocks(x, y);
-        boolean violation = isViolation(blocks, layer);
+        boolean violation = isViolation(blocks, layer, remainingShapes);
         if (!violation) {
             // add piece
             //System.out.println("We will now add a piece...");
@@ -95,7 +92,7 @@ public class Puzzle {
         }
     }
 
-    public boolean isViolation (Coordinate[] blocks, int layer) {
+    public boolean isViolation (Coordinate[] blocks, int layer, ArrayList<PentominoShape> remainingShapes) {
         for (Coordinate coord : blocks) {
             int x = coord.getX();
             int y = coord.getY();
@@ -116,13 +113,30 @@ public class Puzzle {
                 }
             }
         }
+        /*if (!touchesRelevantSquare(blocks, layer)) {
+            System.out.println("Doesn't touch a relevant square!");
+            return true;
+        }*/
         int[][] gridClone = getGridClone();
         for (Coordinate coord : blocks) {
             gridClone[coord.getX()][coord.getY()]--; 
         }
-        if (!checkAllSpaces(gridClone)) {
+        if (!checkLayer1(gridClone, remainingShapes)) {
             //System.out.println("Not enough (or too many) contiguous spaces!");
             return true;
+        }
+        System.out.println("No violations!");
+        return false;
+    }
+
+    public boolean touchesRelevantSquare (Coordinate[] blocks, int layer) {
+        for (Coordinate coord : blocks) {
+            //System.out.println("Coord: " + coord + ", Value: " + grid[coord.getX()][coord.getY()]);
+            //System.out.println("Layer: " + layer);
+            if (grid[coord.getX()][coord.getY()] == layer) {
+                //System.out.println("TOUCHES RELEVANT SQUARE");
+                return true;
+            }
         }
         return false;
     }
@@ -137,12 +151,11 @@ public class Puzzle {
     }
 
     // return true if layer 1 is still solvable
-    public boolean checkLayer1 (int[][] testGrid) {
+    public boolean checkLayer1 (int[][] testGrid, ArrayList<PentominoShape> remainingShapes) {
         ArrayList<Coordinate> validated = new ArrayList<Coordinate>();
         for (int x = 0; x < testGrid.length; x++) {
             for (int y = 0; y < testGrid[x].length; y++) {
                 int count = 0;
-                boolean foundEnough = false;
                 Coordinate newCoord = new Coordinate(x, y);
                 if (!validated.contains(newCoord) && testGrid[x][y] != 0) {
                     ArrayList<Coordinate> queue = new ArrayList<Coordinate>();
@@ -172,19 +185,21 @@ public class Puzzle {
                     }
                     if (count % 5 == 0) {
                         validated.addAll(visited);
-                        foundEnough = true;
                         if (count == 5) {
-                            for (PentominoShape shape : PuzzleSolver.availableShapes) {
+                            boolean foundShape = false;
+                            for (PentominoShape shape : remainingShapes) {
                                 for (Pentomino pentomino : PuzzleSolver.getUniqueForms(shape)) {
                                     if (Coordinate.compareArrangement(visited, pentomino.getOffsets())) {
-                                        return true;
+                                        foundShape = true;
                                     }
                                 }
                             }
-                            return false;
+                            if (!foundShape) {
+                                System.out.println("Couldn't find a pentomino to fill the spaces!");
+                                return false;
+                            }
                         }
-                    }
-                    if (!foundEnough) {
+                    }else{
                         return false;
                     }
                 }
@@ -192,7 +207,7 @@ public class Puzzle {
         }
         return true;
     }
-
+    
     // return false if a space cannot be filled
     // i.e. if there are less than 5 transitively contiguous neighbour spaces
     public boolean checkAllSpaces (int[][] testGrid) {
