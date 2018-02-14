@@ -12,6 +12,13 @@ public class BoardTile {
         occupyingPentomino = shape; 
     }
 
+    public BoardTile copy () {
+        return new BoardTile(position.getX(),
+                             position.getY(),
+                             layer,
+                             occupyingPentomino);
+    }
+
     public boolean isAvailable (int[][] grid) {
         if (occupyingPentomino != null) {
             return false;

@@ -20,6 +20,11 @@ public class Pentomino {
         determineBasicOffsets();
     }
 
+    public Pentomino (PentominoShape encoding, ArrayList<Coordinate> coords){
+        shape = encoding;
+        offsets = coords.toArray(new Coordinate[5]);
+    }
+
     public Pentomino copyOf () {
         Pentomino clone = new Pentomino(shape);
         clone.setOffsets(this.getOffsets());
@@ -155,6 +160,22 @@ public class Pentomino {
                 System.out.println("Bad encoding!");
                 offsets = null;    
         }
+    }
+
+    public ArrayList<Pentomino> getShiftedPositions () {
+        ArrayList<Pentomino> shiftedPositions = new ArrayList<Pentomino>();
+        shiftedPositions.add(this);
+        for (int i = 1; i < 5; i++) {
+            // make new pentomino, anchored at offsets[i]
+            int xOffset = offsets[i].getX();
+            int yOffset = offsets[i].getY();
+            ArrayList<Coordinate> newCoords = new ArrayList<Coordinate>();
+            for (int j = 0; j < 5; j++) {
+                newCoords.add(new Coordinate(offsets[j].getX() - xOffset, offsets[j].getY() - yOffset));
+            }
+            shiftedPositions.add(new Pentomino(this.shape, newCoords));
+        }
+        return shiftedPositions;
     }
     
     public void printOffsets () {

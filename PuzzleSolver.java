@@ -5,7 +5,7 @@ import java.util.concurrent.TimeUnit;
 
 public class PuzzleSolver {
 
-    public static ArrayList<PentominoShape> availableShapes = new ArrayList<PentominoShape>();
+    
 
     public static void main(String[] args) {
         Scanner scan = new Scanner(System.in);
@@ -29,20 +29,14 @@ public class PuzzleSolver {
 
         puzzles.add(makePuzzle(lines));
         for (Puzzle puzz : puzzles) {
-            availableShapes = new ArrayList<PentominoShape>(Arrays.asList(PentominoShape.values()));
-            Node solution = solveLayer(puzz, puzz.getNumLayers(), null);
+            puzz.setShapes(new ArrayList<PentominoShape>(Arrays.asList(PentominoShape.values())));
+            ArrayList<Puzzle> solution = Puzzle.findSolution(puzz);
             if (solution == null) {
                 System.out.println("IMPOSSIBLE!");
             } else {
-                ArrayList<Node> solutionNodes = new ArrayList<Node>();
-                Node current = solution;
-                while (current != null) {
-                    solutionNodes.add(current);
-                    current = current.getGodParent();
-                }
                 System.out.println("\nHere is the solution:\n");
-                for (Node solutionNode : solutionNodes) {
-                    BoardTile[][] boardTiles = solutionNode.getState();
+                for (Puzzle s : solution) {
+                    BoardTile[][] boardTiles = s.getBoard();
                     for (int x = 0; x < boardTiles.length; x++) {
                         for (int y = 0; y < boardTiles[x].length; y++) {
                             if (boardTiles[x][y] == null) {
@@ -60,10 +54,11 @@ public class PuzzleSolver {
             }
             // remove this later pls
             // it means we only look at the first puzzle
-            return;
+            //return;
         }
+        
     }
-    
+    /*
     public static Node solveLayer (Puzzle puzzle, int layer, Node godParent) {
         if (layer == 0) {
             System.out.println("Layer 0 reached: returning godparent");
@@ -99,7 +94,7 @@ public class PuzzleSolver {
             return solution;
         }
     }
-        
+    */
 
 
         /* // set available shapes
@@ -343,7 +338,7 @@ public class PuzzleSolver {
                 }
             }
             if (!foundIdentical) {
-                forms.add(candidate);
+                forms.addAll(candidate.getShiftedPositions());
             }
         }
         return forms;
