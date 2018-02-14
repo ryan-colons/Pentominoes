@@ -256,24 +256,23 @@ public class Puzzle {
                             }
                         }
                     }
-                    if (count % 5 == 0) {
-                        validated.addAll(visited);
-                        if (count == 5) {
-                            boolean foundShape = false;
-                            for (PentominoShape shape : remainingShapes) {
-                                for (Pentomino pentomino : PuzzleSolver.getUniqueForms(shape)) {
-                                    if (Coordinate.compareArrangement(visited, pentomino.getOffsets())) {
-                                        foundShape = true;
-                                    }
+                    if (count < 5) {
+                        return false;
+                    }
+                    validated.addAll(visited);
+                    if (count == 5) {
+                        boolean foundShape = false;
+                        for (PentominoShape shape : remainingShapes) {
+                            for (Pentomino pentomino : PuzzleSolver.getUniqueForms(shape)) {
+                                if (Coordinate.compareArrangement(visited, pentomino.getOffsets())) {
+                                    foundShape = true;
                                 }
                             }
-                            if (!foundShape) {
-                                //System.out.println("Couldn't find a pentomino to fill the spaces!");
-                                return false;
-                            }
                         }
-                    }else{
-                        return false;
+                        if (!foundShape) {
+                            //System.out.println("Couldn't find a pentomino to fill the spaces!");
+                            return false;
+                        }
                     }
                 }
             }
