@@ -32,6 +32,10 @@ public class BoardTile {
     public int getLayer() {
         return layer;
     }
+
+    public Coordinate getPosition () {
+        return position;
+    }
     
     public void setPentomino (Pentomino pentomino) {
         occupyingPentomino = pentomino.getShape();
