@@ -2,13 +2,6 @@ package pentominoes;
 
 import java.util.*;
 
-/**
- * Class for representing pentomino puzzles.
- * @author Aaron Anderson 8649682
- * @author James Strathern 5028791
- * @author Josh Whitney 4442561
- * @author Ryan Collins 5955140
- */
 public class Puzzle implements Comparable<Puzzle> {
 
     int[][] grid;
@@ -38,10 +31,10 @@ public class Puzzle implements Comparable<Puzzle> {
         boardTiles = new BoardTile[highestNum][grid.length][grid[0].length];
     }
 
-    public static Puzzle findSolution(Puzzle p){
+    public static ArrayList<Puzzle> findSolution(Puzzle p){
         int layer = p.getNumLayers();
         if (layer == 0) {
-            return p;
+            return new ArrayList<Puzzle>();
         }
         
         Coordinate target = null;
@@ -59,23 +52,42 @@ public class Puzzle implements Comparable<Puzzle> {
         int x = target.getX();
         int y = target.getY();
         ArrayList<Puzzle> puzzleQueue = new ArrayList<Puzzle>();
+        //System.out.println(x + ", " + y + " (Target is " + target +")");
         for(PentominoShape shape : p.getShapes()){
+            //System.out.println("Attempt: " + shape + " at " + target + "  Layer: " + layer);
             for(Pentomino pent : PuzzleSolver.getUniqueForms(shape)){
                 Puzzle attemptPuzzle = p.getClone();
                 if(attemptPuzzle.addPiece(pent, x, y, layer, p.getShapes(), target)){
+                    //System.out.println("Added: " + pent.getShape());
                     puzzleQueue.add(attemptPuzzle);
                 }
                 
                 
             }
         }
+        //sort queue
         puzzleQueue.sort(null);
+        if (puzzleQueue.size() > 0) {
+            //System.out.println("BEST MOVE: ");
+            //puzzleQueue.get(0).printBoard();
+        }
         for (Puzzle nextPuzzle : puzzleQueue) {
-            Puzzle solution = findSolution(nextPuzzle.getClone());
-            if(solution != null){
-                return solution;
+            if(layer != nextPuzzle.getNumLayers()){
+                ArrayList<Puzzle> solution = new ArrayList<Puzzle>();
+                solution.add(nextPuzzle);
+                ArrayList<Puzzle> remainder = findSolution(nextPuzzle.getClone());
+                if(remainder != null){
+                    solution.addAll(remainder);
+                    return solution;
+                }
+            } else {
+                ArrayList<Puzzle> solution = findSolution(nextPuzzle.getClone());
+                if(solution != null){
+                    return solution;
+                }
             }
         }
+        //System.out.println("Couldn't fill target square!\n");
         return null;
     }
 
@@ -140,6 +152,7 @@ public class Puzzle implements Comparable<Puzzle> {
             for (int x = 0; x < boardTiles[l].length; x++) {
                 for (int y = 0; y < boardTiles[l][x].length; y++) {
                     if (boardTiles[l][x][y] == null) {
+                        //System.out.print(grid[x][y]);
                         System.out.print(".");
                     } else {
                         System.out.print(boardTiles[l][x][y]);
@@ -152,6 +165,8 @@ public class Puzzle implements Comparable<Puzzle> {
     }
     
     public boolean finishedAtLayer (int layer) {
+        //System.out.println("Check if finished:");
+        //System.out.println(this);
         for (int x = 0; x < grid.length; x++) {
             for (int y = 0; y < grid[x].length; y++) {
                 if (grid[x][y] == layer) {
@@ -190,7 +205,6 @@ public class Puzzle implements Comparable<Puzzle> {
         }
     }
 
-    // return true if violation occurs
     public boolean isViolation (Coordinate[] blocks, int layer, ArrayList<PentominoShape> remainingShapes, Coordinate target) {
         boolean foundTarget = false;
         for (Coordinate coord : blocks) {
@@ -200,14 +214,17 @@ public class Puzzle implements Comparable<Puzzle> {
                 foundTarget = true;
             }
             if (x < 0 || y < 0 || x >= grid.length || y >= grid[0].length) {
+                //System.out.println("Out of grid!");
                 return true;
             }
             if (boardTiles[layer - 1][x][y] != null) {
                 if (boardTiles[layer - 1][x][y].getPentomino() != null) {
+                    //System.out.println("Space is already occupied!");
                     return true;
                 }
             }
             if (grid[x][y] == 0) {
+                //System.out.println("Nothing should be placed here! (because this grid space is 0)");
                 return true;
             }
             
@@ -220,8 +237,10 @@ public class Puzzle implements Comparable<Puzzle> {
             gridClone[coord.getX()][coord.getY()]--; 
         }
         if (!checkLayer1(gridClone, remainingShapes)) {
+            //System.out.println("Not enough (or too many) contiguous spaces on layer 1!");
             return true;
         }
+        //System.out.println("No violations!");
         return false;
     }
 
@@ -281,6 +300,7 @@ public class Puzzle implements Comparable<Puzzle> {
                             }
                         }
                         if (!foundShape) {
+                            //System.out.println("Couldn't find a pentomino to fill the spaces!");
                             return false;
                         }
                     }
@@ -290,6 +310,66 @@ public class Puzzle implements Comparable<Puzzle> {
         return true;
     }
     
+    // return false if a space cannot be filled
+    // i.e. if there are less than 5 transitively contiguous neighbour spaces
+    public boolean checkAllSpaces (int[][] testGrid) {
+        ArrayList<Coordinate> validated = new ArrayList<Coordinate>();
+        for (int x = 0; x < testGrid.length; x++) {
+            for (int y = 0; y < testGrid[x].length; y++) {
+                int count = 0;
+                boolean foundEnough = false;
+                Coordinate newCoord = new Coordinate(x, y);
+                if (!validated.contains(newCoord) && testGrid[x][y] != 0) {
+                    ArrayList<Coordinate> queue = new ArrayList<Coordinate>();
+                    ArrayList<Coordinate> visited = new ArrayList<Coordinate>();
+                    queue.add(new Coordinate(x,y));
+                    
+                    while (queue.size() > 0) {
+                        
+                        count += 1;
+                        
+                        if (count >= 5) {
+                            //System.out.println("Found 5 ... count = " + count);
+                            validated.addAll(visited);
+                            foundEnough = true;
+                            break;
+                        }
+                        
+                        Coordinate coord = queue.remove(0);
+                        
+                        //System.out.println(coord + "| " + queue);
+                        //System.out.println("     Visited: " + visited);
+                        
+                        visited.add(coord);
+                        Coordinate[] neighbours = new Coordinate[]{
+                            new Coordinate(coord.getX() + 1, coord.getY()),
+                            new Coordinate(coord.getX() - 1, coord.getY()),
+                            new Coordinate(coord.getX(), coord.getY() + 1),
+                            new Coordinate(coord.getX(), coord.getY() - 1)
+                        };
+                        for (Coordinate neighbour : neighbours) {
+                            if (!outOfBounds(neighbour) && !visited.contains(neighbour) && !queue.contains(neighbour)) {
+                                if (testGrid[neighbour.getX()][neighbour.getY()] != 0) {
+                                    queue.add(neighbour);
+                                    //System.out.println("     Adding: " + neighbour);
+                                }
+                            }
+                        }
+                    }
+                    if (!foundEnough) {
+                        //System.out.println("All spaces checked: FAILED! Bad board below:");
+                        //Puzzle to_print = new Puzzle(testGrid, new BoardTile[0][0]);
+                        //System.out.println(to_print);
+                        return false;
+                    }
+                }
+            }
+        }
+        //System.out.println("All spaces checked: PASSED! Good board below:");
+        //Puzzle to_print = new Puzzle(testGrid, new BoardTile[0][0]);
+        //System.out.println(to_print);
+        return true;
+    }
 
     public BoardTile[][][] getBoard() {
         return boardTiles;

@@ -1,5 +1,12 @@
 package pentominoes;
 
+/**
+ * Class for representing a spot on a pentomino board.
+ * @author Aaron Anderson 8649682
+ * @author James Strathern 5028791
+ * @author Josh Whitney 4442561
+ * @author Ryan Collins 5955140
+ */
 public class BoardTile {
 
     private PentominoShape occupyingPentomino = null;

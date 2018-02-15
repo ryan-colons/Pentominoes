@@ -2,6 +2,13 @@ package pentominoes;
 
 import java.util.*;
 
+/**
+ * Class for solving pentomino puzzles.
+ * @author Aaron Anderson 8649682
+ * @author James Strathern 5028791
+ * @author Josh Whitney 4442561
+ * @author Ryan Collins 5955140
+ */
 public class PuzzleSolver {
 
     public static void main(String[] args) {
@@ -27,47 +34,40 @@ public class PuzzleSolver {
 
         puzzles.add(makePuzzle(lines));
         for (Puzzle puzz : puzzles) {
-            System.out.println(puzz);
-            boolean rotate  = false;
-            int[][] puzzGrid = puzz.getGrid();
-            if (puzzGrid.length < puzzGrid[0].length) {
-                //rotate
-                puzz = rotate(puzz);
-                rotate = true;
+            Puzzle solution = null;
+            boolean rotate = false;
+            if (!isUnsolvable(puzz)) {
+                int[][] puzzGrid = puzz.getGrid();
+                if (puzzGrid.length < puzzGrid[0].length) {
+                    puzz = rotate(puzz);
+                    rotate = true;
+                }
+                puzz.setShapes(new ArrayList<PentominoShape>(Arrays.asList(PentominoShape.values())));
+                solution = Puzzle.findSolution(puzz);
             }
-            puzz.setShapes(new ArrayList<PentominoShape>(Arrays.asList(PentominoShape.values())));
-            ArrayList<Puzzle> solution = Puzzle.findSolution(puzz);
             if (solution == null) {
                 System.out.println("IMPOSSIBLE!");
             } else {
-                for (Puzzle s : solution) {
-                    if (rotate) {
-                        s = rotate(s);
-                    }
-                    BoardTile[][][] boardTiles = s.getBoard();
-                    for (int l = 0; l < boardTiles.length; l++) {
-                        for (int x = 0; x < boardTiles[l].length; x++) {
-                            for (int y = 0; y < boardTiles[l][x].length; y++) {
-                                if (boardTiles[l][x][y] == null) {
-                                    System.out.print(".");
-                                } else {
-                                    System.out.print(boardTiles[l][x][y]);
-                                }
-                            }
-                            System.out.println();
-                        }
-                        System.out.println();
-                    }
+                if (rotate) {
+                    solution = rotate(solution);
                 }
-                System.out.println();
-                System.out.println();
-                
+                solution.printBoard();
+
             }
-            // remove this later pls
-            // it means we only look at the first puzzle
-            //return;
-            }
+        }
         
+    }
+
+    // return true if puzzle grid doesn't sum to 60
+    public static boolean isUnsolvable (Puzzle puzzle) {
+        int count = 0;
+        int[][] grid = puzzle.getGrid();
+        for (int x = 0; x < grid.length; x++) {
+            for (int y = 0; y < grid[x].length; y++) {
+                count += grid[x][y];
+            }
+        }
+        return count != 60;
     }
 
     public static Puzzle rotate (Puzzle puzzle) {
